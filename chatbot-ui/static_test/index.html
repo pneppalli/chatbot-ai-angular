@@ -1,0 +1,69 @@
+    <script>
+      const log = document.getElementById('log');
+      const msgInput = document.getElementById('m');
+      function append(role, text){
+        const el = document.createElement('div');
+        el.textContent = text;
+        el.style.marginBottom = '0.6rem';
+        el.style.padding = '0.6rem 0.75rem';
+        el.style.borderRadius = '10px';
+        if(role === 'you'){
+          el.style.background = 'rgba(124,58,237,0.08)';
+          el.style.marginLeft = 'auto';
+        } else {
+          el.style.background = 'rgba(6,182,212,0.06)';
+        }
+        log.appendChild(el);
+      }
+      async function send(e){
+        if(e && e.preventDefault) e.preventDefault();
+        const text = msgInput.value.trim();
+        if(!text) return false;
+        append('you','You: ' + text);
+        msgInput.value = '';
+        try{
+          const res = await fetch('http://127.0.0.1:8000/chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
+          const j = await res.json();
+          if(res.ok){
+            append('bot','Assistant: ' + (j.reply||JSON.stringify(j)));
+          } else {
+            append('bot','Error: ' + (j.detail || JSON.stringify(j)));
+          }
+        }catch(err){
+          append('bot','Network error: ' + err);
+        }
+        log.scrollTop = log.scrollHeight;
+        return false;
+      }
+    </script>
+  </body>
+
+</html>
++      const msgInput = document.getElementById('m');
+      function append(role, text){
+        const el = document.createElement('div');
++        el.textContent = text;
++        el.style.marginBottom = '0.6rem';
++        el.style.padding = '0.6rem 0.75rem';
++        el.style.borderRadius = '10px';
++        if(role === 'you'){el.style.background = 'rgba(124,58,237,0.08)'; el.style.marginLeft='auto'} else {el.style.background='rgba(6,182,212,0.06)'}
++        log.appendChild(el);
++      }
++      async function send(e){
++        if(e && e.preventDefault) e.preventDefault();
++        const text = msgInput.value.trim();
++        if(!text) return false;
++        append('you','You: ' + text);
++        msgInput.value = '';
++        try{
++          const res = await fetch('http://127.0.0.1:8000/chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
++          const j = await res.json();
++          if(res.ok){append('bot','Assistant: ' + (j.reply||JSON.stringify(j)))} else {append('bot','Error: ' + (j.detail || JSON.stringify(j)))}
++        }catch(err){append('bot','Network error: ' + err)}
++        log.scrollTop = log.scrollHeight;
++        return false;
++      }
++    </script>
++  </body>
++
+</html>

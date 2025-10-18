@@ -1,0 +1,44 @@
+{
+  "$schema": "https://angular.io/cli/lib/config/schema.json",
+  "version": 1,
+  "projects": {
+    "chatbot": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/chatbot",
+            "index": "src/index.html",
+            "main": "src/main.ts",
+            "tsConfig": "tsconfig.json",
+              "assets": [],
+              "styles": [
+                "src/styles.css"
+              ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "chatbot:build"
+          }
+        }
+      }
+    }
+  },
+  "defaultProject": "chatbot",
+  "cli": {
+    "analytics": "3bd6d3dc-1c43-427b-9c67-753d03a2aeb6"
+  }
+}
