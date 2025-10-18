@@ -1,10 +1,5 @@
-from typing import Optional
+from typing import Optional, Any
 import os
-import sys
-
-from typing import Optional
-import os
-import sys
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,55 +12,79 @@ except Exception:  # pragma: no cover - handled at runtime
     openai = None
 
 
-def get_api_key():
-    key = os.getenv("OPENAI_API_KEY")
-    if not key:
-        raise RuntimeError("OPENAI_API_KEY environment variable is not set")
-    return key
+def get_api_key() -> str:
+  """Return the OPENAI_API_KEY from the environment or raise RuntimeError.
+
+  This intentionally does not expose the key value anywhere else.
+  """
+  key = os.getenv("OPENAI_API_KEY")
+  if not key:
+    raise RuntimeError("OPENAI_API_KEY environment variable is not set")
+  return key
 
 
-def make_openai_client():
-  if openai is None:
-    return None
-  if hasattr(openai, "OpenAI"):
+def make_openai_client() -> Any:
+    """Create and return an OpenAI client object compatible with multiple SDK versions.
+
+    If the `openai` package provides a top-level `OpenAI` client class (newer SDK),
+    return an instance of that. Otherwise return the `openai` module object
+    which exposes legacy functions like `ChatCompletion.create`.
+    If `openai` is not importable, returns None.
+    """
+    if openai is None:
+        return None
+
+    # Newer OpenAI SDK exposes an `OpenAI` client class
+    if hasattr(openai, "OpenAI"):
+        try:
+            return openai.OpenAI()
+        except Exception:
+            # Fall back to the module object if instantiation fails
+            return openai
+
+    return openai
+
+
+def _extract_chat_content(resp: Any) -> str:
+    """Extracts the assistant content from various possible OpenAI response shapes.
+
+    The function attempts several common access patterns to be compatible with
+    different OpenAI SDK response formats. If none match, returns the
+    stringified response.
+    """
     try:
-      return openai.OpenAI()
+        return resp.choices[0].message.content
     except Exception:
-      return openai
-  return openai
+        pass
 
+    try:
+        return resp.choices[0].message["content"]
+    except Exception:
+        pass
 
-def _extract_chat_content(resp):
-  try:
-    return resp.choices[0].message.content
-  except Exception:
-    pass
-  try:
-    return resp.choices[0].message["content"]
-  except Exception:
-    pass
-  try:
-    return resp.choices[0].text
-  except Exception:
-    pass
-  return str(resp)
+    try:
+        return resp.choices[0].text
+    except Exception:
+        pass
+
+    return str(resp)
 
 
 app = FastAPI(title="Simple OpenAI Chatbot API")
 
 # Allow local frontend origins for development
 app.add_middleware(
-  CORSMiddleware,
-  # Allow local frontend origins for development (include both 4200 and 8040)
-  allow_origins=[
-    "http://localhost:4200",
-    "http://127.0.0.1:4200",
-    "http://localhost:8040",
-    "http://127.0.0.1:8040",
-  ],
-  allow_credentials=True,
-  allow_methods=["*"],
-  allow_headers=["*"],
+    CORSMiddleware,
+    # Allow local frontend origins for development (include both 4200 and 8040)
+    allow_origins=[
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+        "http://localhost:8040",
+        "http://127.0.0.1:8040",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -80,55 +99,9 @@ def status():
 
 
 class ChatRequest(BaseModel):
-    message: str
-    model: Optional[str] = "gpt-3.5-turbo"
-    use_basic: Optional[bool] = False
-
-
-@app.get("/", response_class=HTMLResponse)
-def index():
-    # Very small single-file web client for quick demos
-    return """<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Simple Chatbot</title>
-    <style>body{font-family:Arial,Helvetica,sans-serif;margin:2rem}#log{white-space:pre-wrap;border:1px solid #ddd;padding:1rem;height:60vh;overflow:auto}form{margin-top:1rem}</style>
-  </head>
-  <body>
-    <h1>Simple OpenAI Chatbot</h1>
-    <div id="log"></div>
-    <form id="f" onsubmit="return send(event);">
-      <input id="m" autocomplete="off" style="width:80%" placeholder="Type your message..." autofocus />
-      <button type="submit">Send</button>
-    </form>
-    <script>
-      const log = document.getElementById('log');
-      const msgInput = document.getElementById('m');
-      async function send(e){
-        if(e && e.preventDefault) e.preventDefault();
-        const text = msgInput.value.trim();
-        if(!text) return false;
-        log.innerText += '\nYou: ' + text + '\n';
-        msgInput.value = '';
-        try{
-          const res = await fetch('/chat', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text})});
-          const j = await res.json();
-          if(res.ok){
-            log.innerText += 'Assistant: ' + j.reply + '\n';
-          } else {
-            log.innerText += 'Error: ' + (j.detail || JSON.stringify(j)) + '\n';
-          }
-        }catch(err){
-          log.innerText += 'Network error: ' + err + '\n';
-        }
-        log.scrollTop = log.scrollHeight;
-        return false;
-      }
-    </script>
-  </body>
-</html>"""
-
+  message: str
+  model: Optional[str] = "gpt-3.5-turbo"
+  use_basic: Optional[bool] = False
 
 
 @app.post("/chat")
