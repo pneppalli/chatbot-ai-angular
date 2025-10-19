@@ -7,6 +7,7 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first to leverage Docker cache
@@ -22,7 +23,6 @@ COPY openai_client.py .
 COPY notifications.py .
 COPY tools.py .
 COPY app.py .
-COPY gradio_app.py .
 
 # Expose the port that FastAPI will run on
 EXPOSE 8000
