@@ -1,27 +1,12 @@
-"""Pushover notification integration."""
-
 import requests
 from typing import Optional
 from config import get_pushover_user_key, get_pushover_api_token
 
 
 def send_pushover_notification(message: str, title: str = "Chatbot Alert") -> bool:
-    """Send a notification via Pushover.net when information is unavailable.
-    
-    Requires PUSHOVER_USER_KEY and PUSHOVER_API_TOKEN in environment variables.
-    Get your keys from: https://pushover.net/
-    
-    Args:
-        message: The notification message to send
-        title: The notification title (default: "Chatbot Alert")
-        
-    Returns:
-        bool: True if notification sent successfully, False otherwise
-    """
     user_key = get_pushover_user_key()
     api_token = get_pushover_api_token()
     
-    # If Pushover is not configured, log and return
     if not user_key or not api_token:
         print("[pushover] Pushover not configured (missing PUSHOVER_USER_KEY or PUSHOVER_API_TOKEN)", flush=True)
         return False
@@ -33,7 +18,7 @@ def send_pushover_notification(message: str, title: str = "Chatbot Alert") -> bo
             "user": user_key,
             "message": message,
             "title": title,
-            "priority": 0  # Normal priority
+            "priority": 0
         }
         
         response = requests.post(pushover_url, data=payload, timeout=10)
@@ -51,18 +36,6 @@ def send_pushover_notification(message: str, title: str = "Chatbot Alert") -> bo
 
 
 def detect_insufficient_information(user_message: str, bot_response: str) -> bool:
-    """Detect if the bot couldn't provide sufficient information.
-    
-    Returns True if the response indicates lack of information.
-    
-    Args:
-        user_message: The user's original question
-        bot_response: The bot's response to analyze
-        
-    Returns:
-        bool: True if response indicates insufficient information
-    """
-    # Common phrases indicating insufficient information
     insufficient_indicators = [
         "i don't have",
         "i don't know",
@@ -88,12 +61,6 @@ def detect_insufficient_information(user_message: str, bot_response: str) -> boo
 
 
 def notify_insufficient_information(user_message: str, bot_response: str) -> None:
-    """Send a notification if the response indicates insufficient information.
-    
-    Args:
-        user_message: The user's original question
-        bot_response: The bot's response
-    """
     if detect_insufficient_information(user_message, bot_response):
         notification_msg = f"Query: {user_message[:100]}\n\nResponse: {bot_response[:200]}"
         send_pushover_notification(
