@@ -1,6 +1,36 @@
-chatbot-openai/__pycache__/app.cpython-313.pyc
-chatbot-ui/node_modules/.package-lock.json
-chatbot-ui/node_modules/.bin/acorn
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+**/venv/
+**/ENV/
+**/.venv
+**/.env
+
+# Node.js
+**/node_modules/
+**/dist/
+**/.angular/
+
+# IDE
+.vscode/
+.idea/
+**/*.swp
+**/*.swo
+**/*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+**/*.log
+
+# Build artifacts
+**/build/
+**/*.egg-info/
 chatbot-ui/node_modules/.bin/acorn.cmd
 chatbot-ui/node_modules/.bin/acorn.ps1
 chatbot-ui/node_modules/.bin/ansi-html

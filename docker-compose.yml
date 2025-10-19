@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./chatbot-openai
+      dockerfile: Dockerfile
+    container_name: chatbot-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./chatbot-ui
+      dockerfile: Dockerfile
+    container_name: chatbot-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - chatbot-network
+    restart: unless-stopped
+
+networks:
+  chatbot-network:
+    driver: bridge
